@@ -24,6 +24,3 @@ Special thanks to:
 This is our first release, and development is still ongoing. We're actively working on improvements and new features, and we'd love to hear your feedback!
 
 Try it out: https://maven-starter.io
-
-#Java #Maven #OpenSource #SoftwareDevelopment #DevTools #SpringBoot #MaveniverseToolbox
-

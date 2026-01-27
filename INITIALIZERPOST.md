@@ -249,8 +249,8 @@ New options, plugins, and defaults can be added without rewriting existing logic
 Special thanks to:
 
 * **The Maveniverse Toolbox team** for building and maintaining a powerful, well‑designed library
-* **Sandra Parsick** for early proof‑of‑concept work and ongoing contributions
-* **Noah Tayebwa** for driving core development and feature implementation
+* **Sandra Parsick**(Project lead) for early proof‑of‑concept work and ongoing contributions
+* **Noah Tayebwa** for driving development and feature implementation
 
 This project stands on the shoulders of a strong open‑source ecosystem.
 
