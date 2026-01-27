@@ -2,7 +2,9 @@
 
 ## Introduction
 
-We recently released a new version of the [Maven Initializer](https://maven-starter.io), a modern web application that simplifies the creation of Maven‑based Java projects. Instead of starting from a blank directory or copying boilerplate from older projects, developers can bootstrap a production‑ready setup in seconds—complete with a well‑structured `pom.xml`, sensible defaults, and up‑to‑date dependencies.
+We recently released the first version of the [Maven Initializer](https://github.com/support-and-care/maven-initializer), a modern web application that simplifies the creation of Maven‑based Java projects. Instead of starting from a blank directory or copying boilerplate from older projects, developers can bootstrap a production‑ready setup in seconds—complete with a well‑structured `pom.xml`, sensible defaults, and up‑to‑date dependencies.
+
+**Note:** This is our first release, and development is still ongoing. We're actively working on improvements and new features based on community feedback.
 
 In this post, we take a deep dive into the technical internals of the Maven Initializer. The focus is on **how and why** we built the backend around the **Maveniverse Toolbox**, and how its abstractions allowed us to generate Maven projects programmatically in a way that is safe, readable, and maintainable.
 
@@ -257,6 +259,8 @@ This project stands on the shoulders of a strong open‑source ecosystem.
 ## Conclusion
 
 The Maven Initializer demonstrates how modern Java tooling can tame complex build‑time concerns. By building on top of Maveniverse Toolbox, we were able to focus on *developer experience* instead of low‑level XML manipulation.
+
+This is our first release, and we're actively developing new features and improvements. We welcome feedback, contributions, and suggestions from the community as we continue to evolve the project.
 
 If you are building tools that interact with Maven programmatically, Maveniverse Toolbox is a foundation well worth exploring.
 

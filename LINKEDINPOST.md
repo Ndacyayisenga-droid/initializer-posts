@@ -1,6 +1,5 @@
 # Maven Initializer Release v1.2.0
 
-
 🚀 Exciting news! We've just released a new version of the Maven Initializer - a modern web application that simplifies creating new Maven-based Java projects.
 
 Building this tool presented an interesting technical challenge: how do you programmatically generate valid Maven POM files with proper structure, dependencies, and configurations?
@@ -22,4 +21,9 @@ Special thanks to:
 - Sandra Parsick(Project lead) for her contributions and proof-of-concept work
 - Noah Tayebwa for driving the active development
 
+This is our first release, and development is still ongoing. We're actively working on improvements and new features, and we'd love to hear your feedback!
+
 Try it out: https://maven-starter.io
+
+#Java #Maven #OpenSource #SoftwareDevelopment #DevTools #SpringBoot #MaveniverseToolbox
+
