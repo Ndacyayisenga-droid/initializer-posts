@@ -2,6 +2,10 @@
 
 [Initializer for Apache Maven™](https://maven-starter.io/) helps you bootstrap production-ready Maven-based Java projects: a well-structured `pom.xml`, sensible defaults, and up-to-date dependencies in one click. Under the hood, the backend relies on **[Maveniverse Toolbox](https://github.com/maveniverse/toolbox)** for the Maven-heavy work. This short post is about that choice and where it fits.
 
+## The problem: programmatic Maven project generation
+
+The core challenge is **programmatic Maven project generation**: producing a full, valid Maven project (directory layout, `pom.xml`, Maven Wrapper, README) from code, based on user choices in the web UI. We don’t just fill in a static template, we need to create and edit the POM dynamically (add dependencies, plugins, and properties), resolve real versions from Maven repositories, and ensure the result is a valid, buildable project every time. Doing that reliably and maintainably meant we had to choose how to handle the Maven-specific logic (POM model, version resolution, session handling) instead of reimplementing or gluing it ourselves.
+
 ## Why the Toolbox?
 
 We needed a way to generate and edit POMs programmatically, resolve dependency and plugin versions from Maven repositories, and keep the logic maintainable. After evaluating archetype components and custom template engines, we chose **Maveniverse Toolbox**: a library from the Apache Maven™ ecosystem that offers a Java DSL for POM creation and editing, plus version resolution. It’s actively maintained and keeps Maven-specific details in one place instead of scattering them across our codebase.
