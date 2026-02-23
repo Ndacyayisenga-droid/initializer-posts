@@ -32,7 +32,7 @@ private String resolveLatestVersion(
 }
 ```
 
-So for each dependency or plugin we add to the generated POM, we first resolve its latest version via the Toolbox; the resolver talks to the configured repositories and returns a single version string we can plug into the POM. No manual HTTP calls or metadata parsing—the Toolbox encapsulates that.
+So for each dependency or plugin we add to the generated POM, we first resolve its latest version via the Toolbox; the resolver talks to the configured repositories and returns a single version string we can plug into the POM. No manual HTTP calls or metadata parsing the Toolbox encapsulates that.
 
 ## POM generation and editing: how the Toolbox helps
 
