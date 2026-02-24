@@ -32,13 +32,13 @@ private String resolveLatestVersion(
 }
 ```
 
-So for each dependency or plugin we add to the generated POM, we first resolve its latest version via the Toolbox; the resolver talks to the configured repositories and returns a single version string we can plug into the POM. No manual HTTP calls or metadata parsing the Toolbox encapsulates that.
+So for each dependency or plugin we add to the generated POM, we first resolve its latest version via the Toolbox; the resolver talks to the configured repositories and returns a single version string we can plug into the POM. No manual HTTP calls or metadata parsing—the Toolbox encapsulates that.
 
 ## POM generation and editing: how the Toolbox helps
 
-Building the POM is the other half: we start from a minimal `pom.xml` (group, artifact, version) and then add properties, dependency management, dependencies, and plugins. The Toolbox supports this with an **edit session**: we open a session on the POM file, apply all changes through a `PomEditor` callback, and either commit (POM stays valid) or roll back on failure.
+Building the POM is the other half: we start from a minimal `pom.xml` (group, artifact, version) and then add properties, dependency management, dependencies, and plugins. Here we use a **combination of two tools**: the Toolbox provides the **edit session** (create, commit, rollback), while the actual POM editing API comes from **[domtrip](https://github.com/maveniverse/domtrip)**. The Toolbox uses domtrip under the hood: the callback you pass to `editPom` receives a `PomEditor`, which is a class from **domtrip-maven** (the Maven-specific part of domtrip). So if you need to edit XML in general, domtrip can help; for Maven POMs and Maven-specific operations, **domtrip-maven** is the right fit.
 
-We create a session with `toolboxCommando.createEditSession(pomFile)` and pass one or more editors to `editPom`. Each editor receives a `PomEditor` and can set packaging, update properties, insert elements, add dependencies, and configure plugins:
+We create a session with `toolboxCommando.createEditSession(pomFile)` and pass one or more editors to `editPom`. Each editor receives a `PomEditor` (from domtrip-maven) and can set packaging, update properties, insert elements, add dependencies, and configure plugins:
 
 ```java
 try (ToolboxCommando.EditSession editSession = toolboxCommando.createEditSession(pomFile)) {
@@ -61,7 +61,7 @@ try (ToolboxCommando.EditSession editSession = toolboxCommando.createEditSession
 }
 ```
 
-Adding a dependency is done by finding or creating the `<dependencies>` element and inserting `<dependency>` children with `<groupId>`, `<artifactId>`, `<scope>`, and optionally `<version>` (when not managed by a BOM). The Toolbox’s `PomEditor` and Maven element helpers keep the structure valid and avoid manual XML string building. Plugin coordinates (including versions we resolved earlier) are applied with `updatePlugin`. So the flow is: resolve versions with the Toolbox → write minimal POM → edit in one session with the Toolbox → formatted POM on disk.
+Adding a dependency is done by finding or creating the `<dependencies>` element and inserting `<dependency>` children with `<groupId>`, `<artifactId>`, `<scope>`, and optionally `<version>` (when not managed by a BOM). domtrip-maven’s `PomEditor` and Maven element helpers keep the structure valid and avoid manual XML string building. Plugin coordinates (including versions we resolved earlier) are applied with `updatePlugin`. So the flow is: resolve versions with the Toolbox → write minimal POM → edit in one session with the Toolbox → formatted POM on disk.
 
 For a concise picture of how the Initializer is structured and how the Toolbox fits next to the REST API, project generation, and config, see the **[architecture overview in our technical documentation](https://support-and-care.github.io/maven-initializer/architecture/)**. There you’ll find high-level diagrams, the end-to-end generation flow, and pointers to the ADRs (including the decision to use the Toolbox).
 
