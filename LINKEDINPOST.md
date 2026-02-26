@@ -95,7 +95,7 @@ try (ToolboxCommando.EditSession editSession = toolboxCommando.createEditSession
 }
 ```
 
-So: find or create `<dependencyManagement>` / `<dependencies>` (and their children), insert each `<dependency>` with the right elements; then add a plugin with resolved version via `editor.plugins().updatePlugin(...)`. No manual XML string building, domtrip-maven’s `PomEditor` and `MavenPomElements` keep the structure valid.
+Adding a dependency is done by finding or creating the `<dependencies>` element and inserting `<dependency>` children with `<groupId>`, `<artifactId>`, `<scope>`, and optionally `<version>` (when not managed by a BOM). domtrip-maven’s `PomEditor` and Maven element helpers keep the structure valid and avoid manual XML string building. Plugin coordinates (including versions we resolved earlier) are applied with `updatePlugin`.
 
 To make the benefit concrete: we start from a **minimal POM** (only model version and GAV) and the Toolbox edit session turns it into a **full, build-ready POM**. Here is the same project before and after.
 
