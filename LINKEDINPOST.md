@@ -38,30 +38,64 @@ So for each dependency or plugin we add to the generated POM, we first resolve i
 
 Building the POM is the other half: we start from a minimal `pom.xml` (group, artifact, version) and then add properties, dependency management, dependencies, and plugins. Here we use a **combination of two tools**: the Toolbox provides the **edit session** (create, commit, rollback), while the actual POM editing API comes from **[domtrip](https://github.com/maveniverse/domtrip)**. The Toolbox uses domtrip under the hood: the callback you pass to `editPom` receives a `PomEditor`, which is a class from **domtrip-maven** (the Maven-specific part of domtrip). So if you need to edit XML in general, domtrip can help; for Maven POMs and Maven-specific operations, **domtrip-maven** is the right fit.
 
-We create a session with `toolboxCommando.createEditSession(pomFile)` and pass one or more editors to `editPom`. Each editor receives a `PomEditor` (from domtrip-maven) and can set packaging, update properties, insert elements, add dependencies, and configure plugins:
+We create a session with `toolboxCommando.createEditSession(pomFile)` and pass one or more editors to `editPom`. Each editor receives a `PomEditor` (from domtrip-maven) and can set packaging, update properties, insert elements, add dependencies, and configure plugins. The following sample inlines the logic that in our codebase lives in private methods `addDependencyManagement` and `addDependencies`, and shows a single plugin for brevity—so you can see how the Toolbox (and domtrip-maven) is used step by step:
 
 ```java
 try (ToolboxCommando.EditSession editSession = toolboxCommando.createEditSession(pomFile)) {
-  toolboxCommando.editPom(
-      editSession,
-      Collections.singletonList(
-          editor -> {
-            editor.setPackaging("jar");
-            editor.properties()
-                .updateProperty(true, "maven.compiler.release", request.getJavaVersion());
-            editor.properties().updateProperty(true, "project.build.sourceEncoding", "UTF-8");
-            editor.insertMavenElement(editor.root(), "description", request.getDescription());
+    toolboxCommando.editPom(
+            editSession,
+            Collections.singletonList(
+                    editor -> {
+                        editor.setPackaging("jar");
+                        editor.properties()
+                                .updateProperty(true, "maven.compiler.release", request.getJavaVersion());
+                        editor.properties().updateProperty(true, "project.build.sourceEncoding", "UTF-8");
+                        editor.insertMavenElement(editor.root(), "description", request.getDescription());
 
-            addDependencyManagement(editor, request);
-            addDependencies(editor, request);
+                        // add dependency management
+                        var root = editor.root();
+                        var dm = editor.findChildElement(root, MavenPomElements.Elements.DEPENDENCY_MANAGEMENT);
+                        if (dm == null) {
+                            dm = editor.insertMavenElement(root, MavenPomElements.Elements.DEPENDENCY_MANAGEMENT);
+                        }
+                        var dmsTmp = editor.findChildElement(dm, MavenPomElements.Elements.DEPENDENCIES);
+                        if (dmsTmp == null) {
+                            dmsTmp = editor.insertMavenElement(dm, MavenPomElements.Elements.DEPENDENCIES);
+                        }
+                        final var dms = dmsTmp;
+                        var bom = new MavenDependency("org.junit", "junit-bom", DependencyType.BOM, artifactVersionService);
+                        var depEl = editor.insertMavenElement(dms, MavenPomElements.Elements.DEPENDENCY);
+                        editor.insertMavenElement(depEl, MavenPomElements.Elements.GROUP_ID, bom.groupId());
+                        editor.insertMavenElement(depEl, MavenPomElements.Elements.ARTIFACT_ID, bom.artifactId());
+                        editor.insertMavenElement(depEl, MavenPomElements.Elements.VERSION, bom.version());
+                        editor.insertMavenElement(depEl, MavenPomElements.Elements.TYPE, "pom");
+                        editor.insertMavenElement(depEl, MavenPomElements.Elements.SCOPE, "import");
 
-            plugins.forEach(plugin ->
-                editor.plugins().updatePlugin(true, toCoordinates(plugin)));
-          }));
+                        // add dependency
+                        var depsTmp = editor.findChildElement(root, MavenPomElements.Elements.DEPENDENCIES);
+                        if (depsTmp == null) {
+                            depsTmp = editor.insertMavenElement(root, MavenPomElements.Elements.DEPENDENCIES);
+                        }
+                        final var deps = depsTmp;
+                        var dependency = new MavenDependency("org.junit.jupiter", "junit-jupiter", DependencyType.JAR, null);
+                        var depEl2 = editor.insertMavenElement(deps, MavenPomElements.Elements.DEPENDENCY);
+                        editor.insertMavenElement(depEl2, MavenPomElements.Elements.GROUP_ID, dependency.groupId());
+                        editor.insertMavenElement(depEl2, MavenPomElements.Elements.ARTIFACT_ID, dependency.artifactId());
+                        editor.insertMavenElement(depEl2, MavenPomElements.Elements.SCOPE, "test");
+                        if (!dependency.isManagedByBom()) {
+                            editor.insertMavenElement(depEl2, MavenPomElements.Elements.VERSION, dependency.version());
+                        }
+
+                        // add plugin
+                        var plugin = new MavenPlugin(
+                                "org.apache.maven.plugins", "maven-clean-plugin", artifactVersionService);
+                        editor.plugins().updatePlugin(true, Coordinates.of(
+                                plugin.groupId(), plugin.artifactId(), plugin.version(), "", "maven-plugin"));
+                    }));
 }
 ```
 
-Adding a dependency is done by finding or creating the `<dependencies>` element and inserting `<dependency>` children with `<groupId>`, `<artifactId>`, `<scope>`, and optionally `<version>` (when not managed by a BOM). domtrip-maven’s `PomEditor` and Maven element helpers keep the structure valid and avoid manual XML string building. Plugin coordinates (including versions we resolved earlier) are applied with `updatePlugin`.
+So: find or create `<dependencyManagement>` / `<dependencies>` (and their children), insert each `<dependency>` with the right elements; then add a plugin with resolved version via `editor.plugins().updatePlugin(...)`. No manual XML string building—domtrip-maven’s `PomEditor` and `MavenPomElements` keep the structure valid.
 
 To make the benefit concrete: we start from a **minimal POM** (only model version and GAV) and the Toolbox edit session turns it into a **full, build-ready POM**. Here is the same project before and after.
 
@@ -79,13 +113,13 @@ To make the benefit concrete: we start from a **minimal POM** (only model versio
 </project>
 ```
 
-**After — POM once the Toolbox (and domtrip-maven) edit session has run** (same project; packaging, name, description, properties, dependency management, dependencies, and plugins added with resolved versions):
+**After — POM once the Toolbox (and domtrip-maven) edit session has run** (same project; one plugin in this sample for brevity):
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.parsick.maven.samples</groupId>
     <artifactId>simple-single-module-project</artifactId>
@@ -121,64 +155,6 @@ To make the benefit concrete: we start from a **minimal POM** (only model versio
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
                 <version>3.5.0</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.15.0</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.4.0</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.4</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.5.0</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>3.1.4</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>3.1.4</version>
-            </plugin>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.14</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>com.diffplug.spotless</groupId>
-                <artifactId>spotless-maven-plugin</artifactId>
-                <version>3.2.1</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <!--TODO: Please add a configuration-->
-                </configuration>
             </plugin>
         </plugins>
     </build>
