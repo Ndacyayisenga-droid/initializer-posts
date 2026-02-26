@@ -113,7 +113,7 @@ To make the benefit concrete: we start from a **minimal POM** (only model versio
 </project>
 ```
 
-**After — POM once the Toolbox (and domtrip-maven) edit session has run** (same project; one plugin in this sample for brevity):
+**After — POM once the Toolbox (and domtrip-maven) edit session has run** (same project; packaging, name, description, properties, dependency management, dependencies, and plugins added with resolved versions):
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
