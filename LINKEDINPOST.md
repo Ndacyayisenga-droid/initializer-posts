@@ -95,7 +95,7 @@ try (ToolboxCommando.EditSession editSession = toolboxCommando.createEditSession
 }
 ```
 
-So: find or create `<dependencyManagement>` / `<dependencies>` (and their children), insert each `<dependency>` with the right elements; then add a plugin with resolved version via `editor.plugins().updatePlugin(...)`. No manual XML string building—domtrip-maven’s `PomEditor` and `MavenPomElements` keep the structure valid.
+So: find or create `<dependencyManagement>` / `<dependencies>` (and their children), insert each `<dependency>` with the right elements; then add a plugin with resolved version via `editor.plugins().updatePlugin(...)`. No manual XML string building, domtrip-maven’s `PomEditor` and `MavenPomElements` keep the structure valid.
 
 To make the benefit concrete: we start from a **minimal POM** (only model version and GAV) and the Toolbox edit session turns it into a **full, build-ready POM**. Here is the same project before and after.
 
