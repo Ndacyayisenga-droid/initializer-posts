@@ -38,7 +38,7 @@ So for each dependency or plugin we add to the generated POM, we first resolve i
 
 Building the POM is the other half: we start from a minimal `pom.xml` (group, artifact, version) and then add properties, dependency management, dependencies, and plugins. Here we use a **combination of two tools**: the Toolbox provides the **edit session** (create, commit, rollback), while the actual POM editing API comes from **[domtrip](https://github.com/maveniverse/domtrip)**. The Toolbox uses domtrip under the hood: the callback you pass to `editPom` receives a `PomEditor`, which is a class from **domtrip-maven** (the Maven-specific part of domtrip). So if you need to edit XML in general, domtrip can help; for Maven POMs and Maven-specific operations, **domtrip-maven** is the right fit.
 
-We create a session with `toolboxCommando.createEditSession(pomFile)` and pass one or more editors to `editPom`. Each editor receives a `PomEditor` (from domtrip-maven) and can set packaging, update properties, insert elements, add dependencies, and configure plugins. The following sample inlines the logic that in our codebase lives in private methods `addDependencyManagement` and `addDependencies`, and shows a single plugin for brevity—so you can see how the Toolbox (and domtrip-maven) is used step by step:
+We create a session with `toolboxCommando.createEditSession(pomFile)` and pass one or more editors to `editPom`. Each editor receives a `PomEditor` (from domtrip-maven) and can set packaging, update properties, insert elements, add dependencies, and configure plugins.
 
 ```java
 try (ToolboxCommando.EditSession editSession = toolboxCommando.createEditSession(pomFile)) {
